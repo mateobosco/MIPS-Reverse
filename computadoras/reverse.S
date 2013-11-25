@@ -3,7 +3,7 @@
 
 
 #define TAM_CADENA 20
-#define TAMANO_PILA 40
+
 
 .text
 .align 2
@@ -109,5 +109,133 @@ fin_swap:
 .end swap_enlinea
 
 
+
+.globl lineaLeer
+.ent lineaLeer
+lineaLerr:			
+		subu sp , sp , 40	
+		sw $fp , 12 (sp)
+		sw gp , 16 (sp)
+		sw ra , 20 (sp)
+		sw s0 , 24 (sp)
+		sw s1 , 28 (sp)
+		sw s2 , 32 (sp)
+		sw s3 , 36 (sp)
+		sw s4 , 40 (sp)
+		sw a0 , 44 (sp)					#guardo el fd del archivo
+		sw a1 , 48 (sp)					#guardo el puntero al largo del archivo
+	
+		move s0,a0 						#muevo el fd al s0
+		move s1,a1						#muevo el puntero al largo a s1
+		move s2,zero					#cargo cero en i
+
+
+		li a0 , TAM_CADENA				#resevo memoria para la linea
+		move t7 , a0
+		jal mymalloc					#llamo a mymalloc para reservar memoria para la linea
+		move s3 , v0					#muevo a s3 el valor que devuelve mymalloc
+		beqz s3 , manejo_error_mymalloc	#manejo de errores de mymalloc
+	
+		
+		li a0,1							#reservo memoria para un caracter
+		jal mymalloc					#llamo a mymalloc para reservar memoria para un caracter
+		move s4 , v0					#muevo a s4 el valor que devuelve mymalloc
+		beqz s4 , manejo_error_mymalloc	#manejo de errores de mymalloc
+
+ciclo:	
+		li v0 , SYS_read				#SYScall de read para leer un caracter
+		move a0 , s0					#paso el primer parametro, fd al archivo
+		move a1 , s4					#paso el segundo parametro, puntero al mymalloc
+		li a2 , 1						#paso el tercer parametro, cantidad de caracteres a leer
+		syscall
+		bltz v0 , manejo_error_sysread
+	
+		lb t1 , 0 (s4)					#cargo en t1 la letra
+		addu t2 , s3 , s2				#cargo en t2 el valor de linea[i]
+		sb t1 , 0 (t2)					#cargo en linea[i] el valor de la letra
+		addi s2 , 1						#incremento i
+	
+		li t2 , TAM_CADENA				#cargo en t2 el tamano inicial de la linea
+		bne t2 , s2 , sin_realloc		#si i es distinto que tam_cadena llamo a sin_realloc
+		move a0 , s3					#pongo en a0 el valor devuelvo por mymalloc para reallocar
+		sll a1 , t7 , 2					#incremento el valor tamano de la cadena
+		move t7 , a1					
+		jal myrealloc					#llamo a mymalloc
+		beqz v0 , manejo_error_mymalloc	#manejo de error de mymalloc
+		move s3 , v0					#muevo a s3 el valor que devuelve mymalloc
+		li t2 , 10						#cargo el t2 el valor de '\n'
+		lw t1 , 0 (s4)					#cargo en 21 el valor de EOF
+		beq t1 , t2 , fin_ciclo			#si la letra es un enter
+		beqz t1 , fin_ciclo				#si la letra es un EOF
+		b ciclo
+
+fin_ciclo:
+		addi s2 , -1					#resto 1 a i para escrbir arriba del enter o el EOF
+		addu t2 , s3 , s2				#cargo en linea[i] el valor de t2
+		li t1 , 0						#cargo un cero en t1
+		sb t1 , 0 (t2)					#cargo en linea[i] un '\0' para indicar el final de una cadena
+	
+		move a0 , s4					#paso por parametro en a0 el puntero a la memoria que devuelve mymalloc
+		jal myfree						#llamo a myfree para liberar memoria
+		bnez v0 , manejo_error_myfree	#manejo el error de myfree
+	
+		bnez s2 , buen_fin				#llamo a buen_fin
+		move a0 , s3					#si el largo es 0 libero memoria
+		jal myfree						#llamo a myfree
+		bnez v0 , manejo_error_myfree	#manejo error de myfree	
+		b manejo_largo_cero				#llamo a largo_cero			
+
+manejo_error_lectura:
+		li v1 , 1						# codigo de error en 1 CAMBIAR LOS CODIGOS
+		b largo_cero
+	
+manejo_error_mymalloc:
+		li v1 , 2						# codigo de error en 2 CAMBIAR LOS CODIGOS
+		b largo_cero
+	
+manejo_error_myfree:
+		li v1 , 3						# codigo de error en 3 CAMBIAR LOS CODIGOS
+		b largo_cero
+
+manejo_largo_cero:	
+		li v1 , 0						# codigo de error en 0 CAMBIAR LOS CODIGOS
+
+largo_cero:
+		move v0 , zero 
+		sw zero , 0 (s1)				#paso el largo como parametro
+		b fin
+	
+buen_fin:	
+		move v0 , s3					#devuelvo el puntero a la linea
+		li v1 , 0						# codigo de error en 0  CAMBIAR LOS CODIGOS
+		sw s2 , 0 (s1)					#paso el largo de parametro
+		b fin
+	
+fin:	
+	lw $fp , 12 (sp)
+	lw gp , 16 (sp)
+	lw ra , 20 (sp)
+	lw s0 , 24 (sp)
+	lw s1 , 28 (sp)
+	lw s2 , 32 (sp)
+	lw s3 , 36 (sp)
+	lw s4 , 40 (sp)
+	lw a0 , 44 (sp)
+	lw a1 , 48 (sp)
+	addiu sp, sp, 40
+	jr ra
+.end lineaLerr
+
+.data
+.align 2
+.globl reverse_errmsg
+reverse_errmsg: .word sinError, error1, error2, error3, error4
+		.size reverse_errmsg, 16
+		.align 0
+sinError: .asciiz "Se ejecuto sin problemas"
+error1: .asciiz "error1"
+error2: .asciiz "error2"
+error3: .asciiz "error3"
+error4: .asciiz "error4"
 
 
