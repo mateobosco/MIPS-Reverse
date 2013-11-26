@@ -112,7 +112,7 @@ fin_swap:
 
 .globl lineaLeer
 .ent lineaLeer
-lineaLerr:			
+lineaLeer:			
 		subu sp , sp , 40	
 		sw $fp , 12 (sp)
 		sw gp , 16 (sp)
