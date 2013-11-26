@@ -8,6 +8,6 @@ extern const char* reverse_errmsg[];
 
 int reverse(int infd, int outfd);
 
-char* leerLinea(int fd,int* length);
+char* lineaLeer(int fd,int* length);
 
 #endif
