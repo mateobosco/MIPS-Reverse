@@ -244,9 +244,9 @@ return:
 
 .data
 .align 2
-.globl errores
-errores: .word sinError, error1, error2, error3, error4
-		.size errores, 16
+.globl reverse_errmsg
+reverse_errmsg: .word sinError, error1, error2, error3, error4
+		.size reverse_errmsg, 16
 		.align 0
 sinError: .asciiz "No hubo errores"
 error1: .asciiz "error1"

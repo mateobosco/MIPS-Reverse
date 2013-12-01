@@ -10,12 +10,10 @@
 
 
 void invertir_Linea(char* linea,int largo){
-    if (!linea)
-                return;
+    if (!linea) return;
     int i = 0;
     int j = largo-1;
     while (j > i){
-                //Swap
                 char aux = linea[i];
                 linea[i]=linea[j];
                 linea[j]=aux;
@@ -43,7 +41,7 @@ int main(int argc, char** argv){
                 printf("Tp0 Version 1.0");
                 return 0;              
                 }
-        int fileout = open("salida.out",O_WRONLY);
+        //int fileout = open("salida.out",O_WRONLY);
         int i = 0;
         int resultado = 0;
         while (i < numero_archivos){
@@ -55,7 +53,8 @@ int main(int argc, char** argv){
                         fprintf(stderr,"Ocurrio un error al abrir el archivo %s\n. El programa terminara ahora.",argv[i+1]);
                         exit(1);
                 } else {
-                        resultado=reverse(archivo, fileout); // 
+                        //resultado=reverse(archivo, fileout);
+						resultado = reverse(archivo, 1);
                         close(archivo);
                         if(resultado != 0){
                                 printf("%s\n",errores[resultado]);
