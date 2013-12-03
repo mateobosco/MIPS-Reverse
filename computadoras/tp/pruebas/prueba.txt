@@ -1,0 +1,6 @@
+Listado de paises por producto interno bruto (PIB) a precios nominales:
+
+Posicion	Pais		PBI (millones de USD)
+1		Estados Unidos	15.653.366
+2		China		8.250.241
+25		Argentina	474.812

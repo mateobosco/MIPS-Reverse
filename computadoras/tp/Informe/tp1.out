@@ -1,0 +1,20 @@
+\BOOKMARK [1][-]{section.1}{Introducci\363n}{}
+\BOOKMARK [1][-]{section.2}{Dise\361o, Implementaci\363n y Consideraciones Generales}{}
+\BOOKMARK [1][-]{section.3}{Utilizaci\363n del programa}{}
+\BOOKMARK [2][-]{subsection.3.1}{-h \363 -help}{section.3}
+\BOOKMARK [2][-]{subsection.3.2}{-V \363 -version}{section.3}
+\BOOKMARK [1][-]{section.4}{Generaci\363n del archivo binario}{}
+\BOOKMARK [1][-]{section.5}{Ejecuci\363n de la aplicaci\363n}{}
+\BOOKMARK [2][-]{subsection.5.1}{Ejemplos}{section.5}
+\BOOKMARK [1][-]{section.6}{Corridas de Prueba}{}
+\BOOKMARK [2][-]{subsection.6.1}{Archivo de Entrada prueba.txt}{section.6}
+\BOOKMARK [2][-]{subsection.6.2}{tp1 desde la l\355nea de comandos}{section.6}
+\BOOKMARK [2][-]{subsection.6.3}{Prueba desde entrada estandar \(stdin\)}{section.6}
+\BOOKMARK [2][-]{subsection.6.4}{Prueba de prueba1.in y prueba2.in simult\341nea y comparaci\363n con comando rev}{section.6}
+\BOOKMARK [2][-]{subsection.6.5}{Comparaci\363n de las salidas de tp1 y rev utilizando el comando cat y el comando od}{section.6}
+\BOOKMARK [2][-]{subsection.6.6}{Comparaci\363n de las salidas de tp1 y rev utilizando el comando hexdump}{section.6}
+\BOOKMARK [2][-]{subsection.6.7}{Comparaci\363n de las salidas de tp1 y rev utilizando el comando diff}{section.6}
+\BOOKMARK [1][-]{section.7}{C\363digo Fuente de main.c}{}
+\BOOKMARK [1][-]{section.8}{C\363digo Fuente de reverse.h}{}
+\BOOKMARK [1][-]{section.9}{C\363digo MIPS de reverse.S}{}
+\BOOKMARK [1][-]{section.10}{Conclusiones}{}

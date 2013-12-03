@@ -1,0 +1,316 @@
+\documentclass[a4paper,10pt]{article}
+
+\usepackage[ansinew]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{multicol}
+\usepackage{moreverb}
+\usepackage{listings}
+\usepackage[top=2cm, bottom=2cm, left=1cm, right=1cm]{geometry}
+\usepackage{pdfpages}
+
+\title{		\textbf{Trabajo Práctico N° 1: Conjunto de Instrucciones MIPS}}
+
+\author{	  Bosco, Mateo - \textit{Padrón Nro. 93.488}                      \\
+            \texttt{ mateo.bosco@hotmail.com }                                              \\[2.5ex]
+            Hidalgo, Juan Manuel - \textit{Padrón Nro. 93.383}                     \\
+            \texttt{ juanmah\_@hotmail.com }                                              \\[2.5ex]
+            \normalsize{2do. Cuatrimestre de 2013}                                      \\
+            \normalsize{66.20 Organización de Computadoras  $-$ Práctica Martes}  \\
+            \normalsize{Facultad de Ingeniería, Universidad de Buenos Aires}            \\
+       }
+\date{}
+
+\begin{document}
+
+\maketitle   
+\thispagestyle{empty}  
+
+\newpage
+
+\section{Introducción}
+El siguiente informe corresponde a la documentación de la aplicación tp1, detallando los pasos necesarios para compilar y ejecutar dicha aplicación y para la correcta utilización de la misma. La portabilidad de tp1 se asegura para los sistemas operativos Linux (Ubuntu) y NetBSD. 
+
+El objetivo del presente trabajo ha sido realizar una versión del comando \textit{rev} de UNIX escrito en lenguaje C con la implementacion de la funcion \textit{reverse()} en codigo MIPS. El mismo concatena y escribe en stdout el contenido de uno o más archivos, invirtiendo el orden de los caracteres de cada línea.
+
+En las siguientes secciones se detalla como se ha implementado el mismo, así como las correspondientes corridas de prueba y su código fuente en lenguaje C y el código MIPS32.
+
+\section{Diseño, Implementación y Consideraciones Generales}
+
+Para la implementación del programa utilizamos la estructura de pila en donde fuimos apilando letras para luego desapilarlas. Comenzamos recorriendo lo introducido en \textbf{stdin} guardándolo en un buffer en memoria dinámica para luego ir colocando en la pila letra por letra hasta que se encuentre un enter, es decir que termina el renglón, o hasta que sea el fin del \textbf{stdin}. Luego se desapilan las letras colocándolas en un vector para luego escribirlo en \textbf{stdout}, de esta forma queda invertida cada línea.
+
+Para la implementacion del trabajo utilizamos varios archivos:
+\begin{itemize}
+ \item \textbf{main.c}: este programa escrito en C se encarga del manejo de los archivos, el procesamiento de las opciones por linea de comando y el reporte de errores.
+ \item \textbf{reverse.S}: este programa escrito en codigo MIPS contendra la implementacion de la funcion \textit{reverse()} que se encarga de leer una linea y dar vuelta sus caracteres y tambien contendra la definicion del vector \textit{reverse\_errmsg[]} que sera equivalente a un vector C como \textit{const char* reverse\_errmsg[]}. Este vector sera de 5 posiciones, la primera para la correcta finalizacion del programa y las 4 restantes indicando donde se ocurrio el error durante la ejecucion.
+ \item \textbf{reverse.h}: este sera el archivo \textit{header} donde se incluira la declaracion de \textit{reverse()} para que se la pueda llamar desde main.c
+ \end{itemize}
+ 
+ Para la implementacion de la funcion \textit{reverse()} en codigo MIPS, se dividio la tarea en 3 funciones distintas:
+ \begin{itemize}
+ \item \textit{swap\_enlinea}: se encarga de invertir el orden de aparicion de los caracteres dentro de una linea, esta funcion hace el intercambio in situ, es decir, no devuelve otro arreglo sino que cambia los caracteres en el lugar. De este modo, el que era el ultimo caracter del arreglo pasa a ser el primero, el que era el primer pasa a ser el ultimo y asi con todos los caracteres del arreglo. Se recibe como parametro un puntero al arreglo y el largo de este, devuelve el mismo arreglo invertido.
+ \item \textit{lineaLeer}: esta funcion recibe como parametro el fd del archivo a leer, llama a \textit{mymalloc} para pedir memoria para un vector con un tamano definido como constante (\textit{TAM\_CADENA}) y luego va copiando los caracteres del archivo dentro del vector hasta encontrar un `\textbackslash n' o el EOF y comprobando que el tamano de la linea siempre sea menor que el vector, en caso contrario llamando nuevamente a \textit{mymalloc} para pedir un nuevo buffer que sea el doble de grande, copia el contenido y luego a llama \textit{myfree} para liberar el buffer viejo. Una vez terminado, devuelve el puntero al vector con la linea leida
+ \item \textit{reverse}: esta es la funcion que se encarga de llamar a todas las otras. Primero obtiene por parametro los dos fd de los archivos de entrada y salida, luego llama a \textit{lineaLeer} y con el puntero y el largo que esta funcion le devuelve, llama a \textit{swap\_enlinea} para dar vuelta la linea. Una vez terminado esto, escrive el vector invertido en el archivo de salida.
+
+\end{itemize}
+\section{Utilización del programa}
+
+\subsection{-h ó -help}
+Se puede obtener información al instante del programa ejecutando: \textbf{./tp1 -h} o bien \textbf{./tp1 -help} obteniéndose:
+\begin{verbatim}
+$ tp1 -h
+Usage:
+  tp1 -h
+  tp1 -V
+  tp1 [file...]
+Options:
+  -V, --version         Print version and quit.
+  -h, --help            Print this information and quit.
+Examples:
+  tp1 foo.txt bar.txt
+  tp1 gz.txt
+  tp1 <stdin>
+\end{verbatim}
+
+\subsection{-V ó -version}
+Se puede obtener información acerca de la versión del programa ejecutando .\textbf{/tp1 -V} o bien \textbf{./tp1 -version} obteniéndose:
+\begin{verbatim}
+tp1 - 1
+(66.20 Organizacion de Computadoras - FIUBA)
+2do cuatrimestre 2013.
+Escrito por  Mateo Bosco y Juan Manuel Hidalgo.
+\end{verbatim}
+
+\section{Generación del archivo binario}
+Para compilar el programa se deben seguir los siguientes pasos:
+\begin{enumerate}
+ \item Copiar los archivos que se encuentran dentro de la carpeta tp1 a un directorio dentro de NetBSD como fue explicado en clase
+ \item Compilar con los siguientes comandos desde la terminal de GxEmul
+ \begin{verbatim} gcc -c reverse.S
+ gcc -c ./sys_mmap/mymalloc.S -o ./mymalloc.o
+ gcc mymalloc.o reverse.o main.c -o tp1 \end{verbatim}
+ \item Ejecutar el tp1, por ejemplo con el comando  desde la terminal de GxEmul
+ \begin{verbatim}
+ ./tp1 prueba.txt
+ \end{verbatim}
+ 
+\end{enumerate}
+
+\section{Ejecución de la aplicación}
+Para correr tp1, situarse en el directorio donde se encuentra el binario creado en el paso anterior (tp1) y escribir: ./tp1 -h
+
+Esto mostrará la ayuda, con las distintas formas de uso de tp1.
+
+Todos los archivos de prueba usados en esta sección y la siguiente se encuentran en el CD adjunto a este trabajo.
+
+\subsection{Ejemplos}
+\begin{verbatim}
+$ cat prueba1.in
+Se agrava la situacion en Cordoba
+ por los incendios y ya hay cerca d
+e 500 evacuados.
+
+$ cat prueba1.in | ./tp1
+abodroC ne noicautis al avarga eS
+d acrec yah ay y soidnecni sol rop 
+.sodaucave 005 e
+
+$ cat prueba2.in
+El aleman Thomas Bach sera quien este al frente del
+Comite Olimpico Internacional (COI) en los proximos ocho anos.
+Era el favorito antes de la eleccion, y sucedera al belga Jacques Rogge,
+quien fue presidente desde 2001.
+
+$ ./tp1 prueba2.in
+led etnerf la etse neiuq ares hcaB samohT namela lE
+.sona ohco somixorp sol ne )IOC( lanoicanretnI ocipmilO etimoC
+,eggoR seuqcaJ agleb la aredecus y ,noiccele al ed setna otirovaf le arE
+.1002 edsed etnediserp euf neiuq
+\end{verbatim} 
+
+
+\section{Corridas de Prueba}
+
+\subsection{Archivo de Entrada prueba.txt}
+\begin{verbatimtab}
+Listado de paises por producto interno bruto (PIB) a precios nominales:
+
+Posicion	Pais		PBI (millones de USD)
+1		Estados Unidos	15.653.366
+2		China		8.250.241
+25		Argentina	474.812
+\end{verbatimtab}    
+
+\subsection{tp1 desde la línea de comandos}
+\begin{verbatimtab}
+$ ./tp1 prueba.txt
+:selanimon soicerp a )BIP( oturb onretni otcudorp rop sesiap ed odatsiL
+
+)DSU ed senollim( IBP		siaP	noicisoP
+663.356.51	sodinU sodatsE		1
+142.052.8		anihC		2
+218.474	anitnegrA		52
+\end{verbatimtab}
+
+\subsection{Prueba desde entrada estandar (stdin)}
+\begin{verbatim}
+$ ./tp1
+Hola, que tal?
+?lat euq ,aloH
+esto es una prueba.
+.abeurp anu se otse
+\end{verbatim}
+
+\subsection{Prueba de prueba1.in y prueba2.in simultánea y comparación con comando rev}
+\begin{verbatim}
+$ ./tp1 prueba1.in prueba2.in
+abodroC ne noicautis al avarga eS
+d acrec yah ay y soidnecni sol rop 
+.sodaucave 005 e
+led etnerf la etse neiuq ares hcaB samohT namela lE
+.sona ohco somixorp sol ne )IOC( lanoicanretnI ocipmilO etimoC
+,eggoR seuqcaJ agleb la aredecus y ,noiccele al ed setna otirovaf le arE
+.1002 edsed etnediserp euf neiuq
+
+$ rev prueba1.in prueba2.in
+abodroC ne noicautis al avarga eS
+d acrec yah ay y soidnecni sol rop 
+.sodaucave 005 e
+led etnerf la etse neiuq ares hcaB samohT namela lE
+.sona ohco somixorp sol ne )IOC( lanoicanretnI ocipmilO etimoC
+,eggoR seuqcaJ agleb la aredecus y ,noiccele al ed setna otirovaf le arE
+.1002 edsed etnediserp euf neiuq
+\end{verbatim}
+
+\subsection{Comparación de las salidas de tp1 y rev utilizando el comando cat y el comando od}
+\begin{verbatim}
+$ cat prueba1.in | ./tp1 | od -t x1 
+0000000 61 62 6f 64 72 6f 43 20 6e 65 20 6e 6f 69 63 61
+0000020 75 74 69 73 20 61 6c 20 61 76 61 72 67 61 20 65
+0000040 53 0a 64 20 61 63 72 65 63 20 79 61 68 20 61 79
+0000060 20 79 20 73 6f 69 64 6e 65 63 6e 69 20 73 6f 6c
+0000100 20 72 6f 70 20 0a 2e 73 6f 64 61 75 63 61 76 65
+0000120 20 30 30 35 20 65 0a
+0000127
+
+$ cat prueba1.in | rev | od -t x1 
+0000000 61 62 6f 64 72 6f 43 20 6e 65 20 6e 6f 69 63 61
+0000020 75 74 69 73 20 61 6c 20 61 76 61 72 67 61 20 65
+0000040 53 0a 64 20 61 63 72 65 63 20 79 61 68 20 61 79
+0000060 20 79 20 73 6f 69 64 6e 65 63 6e 69 20 73 6f 6c
+0000100 20 72 6f 70 20 0a 2e 73 6f 64 61 75 63 61 76 65
+0000120 20 30 30 35 20 65 0a
+0000127
+\end{verbatim}
+
+\subsection{Comparación de las salidas de tp1 y rev utilizando el comando hexdump}
+\begin{verbatim}
+$ ./tp1 prueba2.in | hexdump -c
+0000000   l   e   d       e   t   n   e   r   f       l   a       e   t
+0000010   s   e       n   e   i   u   q       a   r   e   s       h   c
+0000020   a   B       s   a   m   o   h   T       n   a   m   e   l   a
+0000030       l   E  \n   .   s   o   n   a       o   h   c   o       s
+0000040   o   m   i   x   o   r   p       s   o   l       n   e       )
+0000050   I   O   C   (       l   a   n   o   i   c   a   n   r   e   t
+0000060   n   I       o   c   i   p   m   i   l   O       e   t   i   m
+0000070   o   C  \n   ,   e   g   g   o   R       s   e   u   q   c   a
+0000080   J       a   g   l   e   b       l   a       a   r   e   d   e
+0000090   c   u   s       y       ,   n   o   i   c   c   e   l   e    
+00000a0   a   l       e   d       s   e   t   n   a       o   t   i   r
+00000b0   o   v   a   f       l   e       a   r   E  \n   .   1   0   0
+00000c0   2       e   d   s   e   d       e   t   n   e   d   i   s   e
+00000d0   r   p       e   u   f       n   e   i   u   q  \n            
+00000dd
+
+$ rev prueba2.in | hexdump -c
+0000000   l   e   d       e   t   n   e   r   f       l   a       e   t
+0000010   s   e       n   e   i   u   q       a   r   e   s       h   c
+0000020   a   B       s   a   m   o   h   T       n   a   m   e   l   a
+0000030       l   E  \n   .   s   o   n   a       o   h   c   o       s
+0000040   o   m   i   x   o   r   p       s   o   l       n   e       )
+0000050   I   O   C   (       l   a   n   o   i   c   a   n   r   e   t
+0000060   n   I       o   c   i   p   m   i   l   O       e   t   i   m
+0000070   o   C  \n   ,   e   g   g   o   R       s   e   u   q   c   a
+0000080   J       a   g   l   e   b       l   a       a   r   e   d   e
+0000090   c   u   s       y       ,   n   o   i   c   c   e   l   e    
+00000a0   a   l       e   d       s   e   t   n   a       o   t   i   r
+00000b0   o   v   a   f       l   e       a   r   E  \n   .   1   0   0
+00000c0   2       e   d   s   e   d       e   t   n   e   d   i   s   e
+00000d0   r   p       e   u   f       n   e   i   u   q  \n            
+00000dd
+\end{verbatim}
+
+\subsection{Comparación de las salidas de tp1 y rev utilizando el comando diff}
+\begin{verbatim}
+$ ./tp1 prueba1.in > temp1
+$ rev prueba1.in > temp2
+$ diff -s temp1 temp2
+Files temp1 and temp2 are identical
+
+$ ./tp1 prueba2.in > temp1
+$ rev prueba2.in > temp2
+$ diff -s temp1 temp2
+Files temp1 and temp2 are identical
+
+$ ./tp1 prueba.txt > temp1
+$ rev prueba.txt > temp2
+$ diff -s temp1 temp2
+Files temp1 and temp2 are identical
+\end{verbatim}
+
+\section{Código Fuente de main.c}
+\begin{verbatimtab}
+
+\end{verbatimtab}
+\lstinputlisting[language=C,breaklines=true]{../programa/main.c}
+
+\section{Código Fuente de reverse.h}
+\begin{verbatimtab}
+
+\end{verbatimtab}
+\lstinputlisting[language=C,breaklines=true]{../programa/reverse.h}
+
+\section{Código MIPS de reverse.S}
+\begin{verbatimtab}
+
+\end{verbatimtab}
+
+\lstinputlisting[breaklines=true]{../programa/reverse.S}
+
+
+\section{Conclusiones}
+
+Con este trabajo pudimos observar que es posible migrar la logica de un programa escrito en C a codigo Assembly. Si bien esto implica un trabajo extra y unas cuantas horas mas de programacion, este trabajo nos podria ser muy util para programas donde la velocidad de procesamiento es importante.
+Por ejemplo, para algoritmos de ordenamiento seria una buena mejora programar la logica del ordenamiento en Assembly mientras que el manejo de archivos y errores lo puede manejar tranquilamente un programa escrito en un lenguaje de mas alto nivel como C
+
+\begin{flushleft}
+
+\newpage
+\includepdf[scale=1,pages={1,2,3,4}]{../enunciado.pdf}
+% Citas bibliográficas.
+
+\begin{thebibliography}{99}
+
+\bibitem{NIK94}  Nikos Drakos, ``Manual de Latex,'' 1994, Computer Based 
+Learning Unit, University of Leeds, 
+http://www.fceia.unr.edu.ar/lcc/cdrom/Instalaciones/LaTex/latex.html.
+
+\bibitem{HEN00} J. L. Hennessy and D. A. Patterson, ``Computer Architecture. 
+A Quantitative Approach,'' 3ra Edición, Morgan Kaufmann Publishers, 2000.
+
+\bibitem{GXE10} Curso Práctica Organización de Computadoras, ``Instructivo GXEmul y NetBSD,'' Univ. de Buenos Aires, 2010, .
+
+\bibitem{GNU11} Free Software Foundation, ``Core GNU utilities manual,'' 
+2011, http://www.gnu.org/software/libc/manual/html\_node/Getopt.html.
+
+\bibitem{MIPS} MIPS Technologies, Inc., ''MIPS32 Architecture For Programmers
+Volume I: Introduction to the MIPS32 Architecture'', 2001, http://www.ece.lsu.edu/ee4720/mips32v1.pdf
+
+\bibitem{LXR} Linux, ''Linux Cross Reference'', http://lxr.free-electrons.com/source/include/asm-mips/fpregdef.h?v=2.6.25
+
+\bibitem{INST} Charles Price, ''MIPS IV Instruction Set'', 1995,http://math-atlas.sourceforge.net/devel/assembly/mips-iv.pdf
+
+\end{thebibliography}
+
+\end{flushleft}
+
+\end{document}
